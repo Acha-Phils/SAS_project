@@ -1,5 +1,5 @@
   /*************************/
- /*** CLASS 2 EXERCISES ***/
+ /***  EXERCISES ***/
 /*************************/
 
 /***********************/
@@ -23,7 +23,6 @@ DATA Ex1_Farenheit (DROP = celcius1-celcius100 i);
 
 RUN;
 
-
 /*** Exercise 2 ***/
 
 PROC IMPORT DATAFILE = "H:\Doctoraat\Lessen SAS\2015-2016\Les 2\Home Exercises\ex2.xlsx" DBMS = XLSX OUT = Ex2 REPLACE;
@@ -37,7 +36,6 @@ DATA Ex2_r;
 	DO i = 1 TO DIM(All_num);
 		All_num{i} = ROUND(All_num{i},.001);
 	END;
-
 RUN;
 
 /****************/
@@ -49,9 +47,7 @@ PROC IMPORT DATAFILE = 'H:\Doctoraat\Lessen SAS\2015-2016\Les 2\Home Exercises\S
 																		OUT= Sales REPLACE DBMS = XLS;
 	* SHEET="Sheet2"  Is not necessary, is specified in the RANGE statement;
 	RANGE="Sheet2$A2:E33";
-
 RUN;
-
 
 /* 2 */
 
@@ -72,33 +68,26 @@ DATA Sales_missing (RENAME = (custid=cust_id prodid = prod_id) DROP=cust_id prod
 							   in the sorting */
 		prodid="";
 		missing = 1;
-
 	END;
-
 	ELSE missing = 0;
 
 RUN;
 
-PROC SORT DATA=Sales_missing OUT=Sales_sorted NODUPKEY;
-												/* Making the rows unique */
+PROC SORT DATA=Sales_missing OUT=Sales_sorted NODUPKEY;											/* Making the rows unique */
 	BY missing prod_id date DESCENDING cust_id; 
 			/* First sort by missing, so the misings (= 1) come last */
-
 RUN;
 
 /* 3 */
 DATA Sales_price;
  SET Sales_sorted;
-
 	IF prod_id='56' THEN price=1.55;
 	 ELSE IF prod_id='42' THEN price=6.99;
 	 ELSE IF prod_id='86' THEN price=5.45;
 	 ELSE IF prod_id='91' THEN price=6.77;
 	* ELSE price=.; /* This additional step is not necessary as long as you specify all possible options */
-
 	tot_price=quantity*price;
-	month=MONTH(date);
-	
+	month=MONTH(date);	
 RUN;
 
 /* 4 */
@@ -114,64 +103,50 @@ PROC MEANS DATA = Sales_price_s NOPRINT;
 	CLASS month;
 	VAR tot_price;
 	OUTPUT OUT = Sales_sum SUM(tot_price) = Monthly_sales;
-
 RUN;
 
 PROC PRINT DATA = Sales_sum;
 	VAR month monthly_sales;
 	WHERE month ~= .;
 		/* Exclude the missing month, this is the total */
-
 RUN;
 
 /*5 */
 PROC FREQ DATA = Sales_price;
 	TABLES cash*month / NOCOL NOROW NOPERCENT;
-
 RUN;
 
 /* 6 */
 PROC SORT DATA = Sales_price OUT = Sales_price_unique NODUPKEY;
 	BY cust_id;
-
 RUN;
 
 DATA Sales_random;
  SET Sales_price_unique;
 
 	a=UNIFORM(10);
-
 RUN;
 
 PROC SORT DATA = Sales_random OUT = Sales_random_s;
 	BY a;
-
 RUN;
 
 DATA Sample (KEEP = cust_id);
  SET Sales_random_s;
-
 	IF _N_ <= 3;
-
 RUN;
 
 /* LAG function */
 PROC SORT DATA = Sales OUT = Cust_sorted;
  BY cust_id DESCENDING cash;
-
 RUN;
 
 DATA Sales_lag;
  SET Cust_sorted;
  	BY cust_id; 
-
 	IF cash = 1 THEN dif_quant = DIF(quantity);
-
 	IF FIRST.cust_id THEN dif_quant = 0;
-
 RUN;
-
-
 
 /*****************/
 /**** Part 3 ****/
@@ -187,8 +162,7 @@ PROC IMPORT DATAFILE = "H:\Doctoraat\Lessen SAS\2015-2016\Les 2\Home Exercises\C
 RUN;
 
 PROC SORT DATA = Tickets;
-	BY Cust_nr;
-	 
+	BY Cust_nr;	 
 RUN;
  
 DATA Tickets (DROP = counter ticket_nr); 
@@ -201,7 +175,6 @@ DATA Tickets (DROP = counter ticket_nr);
 		avg_total = 0;
 		counter = 0;
 	END;
-
 	counter + 1;
 	avg_amount = avg_amount + amount;
 	avg_total = avg_total + ticket_total;
@@ -211,7 +184,6 @@ DATA Tickets (DROP = counter ticket_nr);
 		avg_total = avg_total/counter;
 		OUTPUT;
 	END;
-
 RUN;
 
 DATA Customer_info;
@@ -222,59 +194,47 @@ DATA Customer_info;
 
 RUN;
 
-
-
 /* First add customer number to the external file for later merging */
 /* Rename the external number variable name because it is different between datasets */
 DATA External_card (RENAME = (Ext_card_number = External_card));
  SET External_card;
  LABEL Ext_card_number = ; 
  	/* Remove the label or it looks that the rename statement did nothing */
- 
 RUN;
 
 PROC SORT DATA = External_card ;
-	BY External_card;
-	 
+	BY External_card;	 
 RUN;
 
 /* Keep only the unique card numbers for the merge */
 PROC SORT DATA = Tickets OUT = Tick_unique NODUPKEY;
 	BY External_card;
-
 RUN;
 
 DATA External_card;
  MERGE External_card (IN = a) Tick_unique (KEEP = External_card Cust_nr);
  	BY external_card;
-
 	IF a;
-
 RUN;
 
 PROC SORT DATA = Tickets;
 	BY Cust_nr;
-
 RUN;
 
 PROC SORT DATA = External_card;
 	BY Cust_nr;
-
 RUN;
 
 PROC SORT DATA = Customer_info;
 	BY Cust_nr;
-
 RUN;
 
 DATA No_External_Info External_Info Rest;
  MERGE Tickets (IN = a) Customer_info (IN = b) External_card (IN = c);
  	BY cust_nr;
-
 	IF a AND b AND NOT c THEN OUTPUT No_external_info;
 	 ELSE IF a AND b AND c THEN OUTPUT External_info;
 	 ELSE OUTPUT Rest;
-
 RUN;
 
 /* Initial conclusions: One customer number in the tickets dataset has no match in the customer 
@@ -299,26 +259,21 @@ averages it would be an argument pro the cooperation. */
 
 DATA Mileages1;
  SET SASHELP.mileages;
-
- 	city = COMPRESS(city);
+	city = COMPRESS(city);
 	city = COMPRESS(city,".");
-
 RUN;
 
 PROC TRANSPOSE DATA = Mileages1 OUT = Mileages2;
 	ID City;
 	VAR Atlanta--WashingtonDC;
-
 RUN;
 
 DATA New (KEEP = city atlanta--washingtondc);
  SET Mileages2 (RENAME = (_NAME_ = city)) Mileages1;
  	BY city;
-
 	ARRAY vars {*} atlanta--washingtonDC;
 	ARRAY new {10} var1-var10;
 	RETAIN var1-var10;
-
 	IF FIRST.City THEN DO;
 		DO i = 1 TO 10;
 			new(i) = vars(i);
@@ -331,7 +286,6 @@ DATA New (KEEP = city atlanta--washingtondc);
 		END;
 		OUTPUT;
 	END;
-
 RUN;
 
 /* Alternative solution */
